@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nardaa - Developer-First Transactional Email Service
 
-## Getting Started
+Nardaa is a transactional email service designed for developers to eliminate the friction of sending emails from `localhost` and managing templates.
 
-First, run the development server:
+## 🚀 Features
 
+-   **Developer-First API**: Simple SDK to trigger emails.
+-   **Sandbox Mode**: "Trap" emails sent from localhost without spamming real users.
+-   **Dynamic Templates**: Manage templates with a visual editor (Handlebars support).
+-   **Microservices Architecture**: Scalable, decoupled services managed via Docker.
+-   **Real-time Logs**: Instant visibility into email delivery status.
+
+## 🏗 System Architecture
+
+The system is built as a set of Microservices orchestrated by Docker Compose:
+
+1.  **NGINX / Edge Layer**: Routes traffic to the API Gateway.
+2.  **API Gateway**: Handles Authentication, Rate Limiting, and Routing.
+3.  **Project Service**: Manages Projects and API Keys.
+4.  **Template Service**: Manages Email Templates (CRUD).
+5.  **Email Service**: Validates requests and queues email jobs (Producer).
+6.  **Worker Service**: Consumes jobs from RabbitMQ and handles delivery.
+
+### Technology Stack
+-   **Backend**: Node.js, Express, Handlebars
+-   **Infrastructure**: Docker, NGINX
+-   **Queue**: RabbitMQ (Topic Exchange, DLQ, Retry)
+-   **Database**: Firebase Firestore
+-   **Auth**: Firebase Auth & API Keys
+
+## 🛠 Getting Started
+
+### Prerequisites
+-   Node.js (v18+)
+-   Docker & Docker Compose
+-   Firebase Project Credentials
+
+### Installation
+
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/nirmalkr01/nardaa.git
+    cd nardaa
+    ```
+
+2.  **Run with Docker (Recommended)**:
+    ```bash
+    cd Backend
+    docker-compose up --build
+    ```
+    The API will be available at `http://localhost/api/v1`.
+
+### Local Development (Manual)
+
+If you want to run services individually without Docker:
+
+1.  **Install Dependencies**:
+    ```bash
+    cd Backend
+    npm install
+    ```
+
+2.  **Environment Variables**:
+    Create `Backend/.env`:
+    ```env
+    PORT=3000
+    RABBITMQ_URL=amqp://localhost
+    # FIREBASE_SERVICE_ACCOUNT=... (Optional for mock mode)
+    ```
+
+3.  **Start Services**:
+    -   Gateway: `node services/gateway/server.js`
+    -   Services: `node services/<service-name>/server.js`
+    -   Worker: `node services/worker/index.js`
+
+## 🧪 Testing
+
+Run the smoke test script to verify the full flow:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd Backend
+# Test against Docker (Port 80)
+USE_DOCKER=true node test_smoke.js
+
+# Or test against local Gateway (Port 3000)
+node test_smoke.js
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📜 License
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
