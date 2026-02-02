@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: node services/gateway/server.js
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - PROJECT_SERVICE_URL=http://project-service:3001
+      - TEMPLATE_SERVICE_URL=http://template-service:3002
+      - EMAIL_SERVICE_URL=http://email-service:3003
+      - RABBITMQ_URL=amqp://rabbitmq
+      # Env vars for Firebase would be here
+    depends_on:
+      - project-service
+      - template-service
+      - email-service
+
+  project-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: node services/project-service/server.js
+    ports:
+      - "3001:3001"
+    environment:
+      - PROJECT_SERVICE_PORT=3001
+
+  template-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: node services/template-service/server.js
+    ports:
+      - "3002:3002"
+    environment:
+      - TEMPLATE_SERVICE_PORT=3002
+
+  email-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: node services/email-service/server.js
+    ports:
+      - "3003:3003"
+    environment:
+      - EMAIL_SERVICE_PORT=3003
+      - RABBITMQ_URL=amqp://rabbitmq
+    depends_on:
+      - rabbitmq
+
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - gateway
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: node services/worker/index.js
+    environment:
+      - RABBITMQ_URL=amqp://rabbitmq
+    depends_on:
+      - rabbitmq
+
+#  redis: # Optional if we need it
+#    image: redis:alpine
+#    ports:
+#      - "6379:6379"
